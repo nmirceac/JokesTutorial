@@ -9,7 +9,8 @@ using System.Net.Http;
 using JokesTutorial.Data;
 using JokesTutorial.Models;
 using Newtonsoft.Json;
-using System.Data;
+using Newtonsoft.Json.Linq;
+using System.Dynamic;
 
 namespace JokesTutorial.Controllers
 {
@@ -38,29 +39,58 @@ namespace JokesTutorial.Controllers
         // POST: Jokes/SearchResults
         public async Task<IActionResult> SearchResults(String Search)
         {
+            string apiBase, apiKey, apiEndPoint;
+            bool apiDebug;
+            Uri apiUri;
+            HttpRequestMessage request;
 
+            apiBase = Environment.GetEnvironmentVariable("API_CLIENT_BASE_URL");
+            apiKey = Environment.GetEnvironmentVariable("API_CLIENT_SECRET");
+            apiDebug = Convert.ToBoolean(Environment.GetEnvironmentVariable("API_CLIENT_DEBUG"));
 
+            apiEndPoint = "/api/users/getAuthData/1212312321421";
+            apiEndPoint = "/api/leads/getForIntermediary/4";
+            apiEndPoint = "/api/quote/setClientName";
+            apiUri = new Uri(apiBase + apiEndPoint);
 
-            var request = new HttpRequestMessage(HttpMethod.Get,
-            "https://api.github.com/repos/aspnet/AspNetCore.Docs/branches");
-            request.Headers.Add("Accept", "application/vnd.github.v3+json");
-            request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
+            if(true) {
+                request = new HttpRequestMessage(HttpMethod.Post, apiUri);
+            } else {
+                request = new HttpRequestMessage(HttpMethod.Get, apiUri);
+            }
+
+            
+            request.Headers.Add("Accept", "application/json");
+            request.Headers.Add("Accept", "application/json");
+            request.Headers.Add("X-Api-Key", apiKey);
+
 
             var client = new HttpClient();
 
             var response = await client.SendAsync(request);
 
-            //if(response.IsSuccessStatusCode)
-            //{
-
-            var definition = new { name = "" };
+            var SuccessfulResponseGet = new { success = false, data = new ExpandoObject() };
+            var SuccessfulResponsePost = new { success = false, data = new ExpandoObject(), ack = false };
+            var UnsuccessfulResponse = new { success = false, data = new ExpandoObject(), message="" };
 
             var stringResponse = await response.Content.ReadAsStringAsync();
-            var jsonResponse = JsonConvert.DeserializeAnonymousType<ICollection>(stringResponse, definition);
-            //DataSet jsonResponse = JsonConvert.DeserializeObject<DataSet>(stringResponse);
-            //var jsonResponse = System.Text.Json.JsonSerializer.Deserialize(stringResponse);
+
+            dynamic jsonResponse;
+
+            if(response.IsSuccessStatusCode)
+            {
+                jsonResponse = JsonConvert.DeserializeAnonymousType(stringResponse, SuccessfulResponseGet);
+            } else {
+                jsonResponse = JsonConvert.DeserializeAnonymousType(stringResponse, UnsuccessfulResponse);
+            }
+            
+            
+            //dynamic jsonResponse = JsonConvert.DeserializeObject(stringResponse);
+            //dynamic jsonResponse = JArray.Parse(stringResponse);
+            //dynamic jsonResponse = JObject.Parse(stringResponse);
+            
             //Console.WriteLine(stringResponse);
-            Console.WriteLine(jsonResponse);
+            //Console.WriteLine(jsonResponse);
             //return Content(stringResponse);
             return Json(jsonResponse);
             //}
