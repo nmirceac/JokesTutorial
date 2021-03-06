@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using JokesTutorial.Data;
 using JokesTutorial.Models;
+using JokesTutorial.Libraries;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Dynamic;
+using System.Web;
+using System.Text.RegularExpressions;
 
 namespace JokesTutorial.Controllers
 {
@@ -36,53 +39,125 @@ namespace JokesTutorial.Controllers
             return View("SearchForm");
         }
 
-        // POST: Jokes/SearchResults
-        public async Task<IActionResult> SearchResults(String Search)
+        public static string getApiBaseUrl()
         {
-            string apiBase, apiKey, apiEndPoint;
-            bool apiDebug;
-            Uri apiUri;
-            HttpRequestMessage request;
+            var apiBaseUrl = Environment.GetEnvironmentVariable("API_CLIENT_BASE_URL").TrimEnd(new char[] {'/'});
+    
+            return apiBaseUrl;
+        }
 
-            apiBase = Environment.GetEnvironmentVariable("API_CLIENT_BASE_URL");
-            apiKey = Environment.GetEnvironmentVariable("API_CLIENT_SECRET");
-            apiDebug = Convert.ToBoolean(Environment.GetEnvironmentVariable("API_CLIENT_DEBUG"));
+        public static string buildUrl(string endpoint, Dictionary<string, string> endpointParams, Dictionary<string, string> endpointData)
+        {
+            var endpointUrl = endpoint;
 
-            apiEndPoint = "/api/users/getAuthData/1212312321421";
-            apiEndPoint = "/api/leads/getForIntermediary/4";
-            apiEndPoint = "/api/quote/setClientName";
-            apiUri = new Uri(apiBase + apiEndPoint);
-
-            if(true) {
-                request = new HttpRequestMessage(HttpMethod.Post, apiUri);
-            } else {
-                request = new HttpRequestMessage(HttpMethod.Get, apiUri);
+            foreach (Match match in Regex.Matches(endpoint, @"{(.*?)}")) {
+                var matchedParam = match.Value.TrimStart('{').TrimEnd('}');
+                if(endpointParams.ContainsKey(matchedParam)) {
+                    endpointUrl = endpointUrl.Replace(match.Value, HttpUtility.UrlEncode(endpointParams[matchedParam]));
+                }
             }
 
+            if(endpointData.Count>0) {
+                List<string> dataParts = new List<string>();
+                foreach(KeyValuePair<string, string> part in endpointData) {
+                    dataParts.Add(HttpUtility.UrlEncode(part.Key)+"="+HttpUtility.UrlEncode(part.Value));
+                }
+                endpointUrl += "?"+String.Join("&", dataParts.ToArray());
+            }
             
-            request.Headers.Add("Accept", "application/json");
+            return getApiBaseUrl() + '/' + endpointUrl.TrimStart(new char[] {'/'});
+        }
+
+        public static HttpRequestMessage prepareRequest(HttpMethod method, string url)
+        {
+            HttpRequestMessage request;
+            string apiKey;
+
+            request = new HttpRequestMessage(method, url);
+            apiKey = Environment.GetEnvironmentVariable("API_CLIENT_SECRET");
+
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("X-Api-Key", apiKey);
 
+            return request;
+        }
 
-            var client = new HttpClient();
+        public static async Task<ExpandoObject> doGet(string endpoint, Dictionary<string, string> endpointParams, Dictionary<string, string> endpointData)
+        {
+            //apiDebug = Convert.ToBoolean(Environment.GetEnvironmentVariable("API_CLIENT_DEBUG"));
+
+            string endpointUrl;
+            HttpRequestMessage request;
+            HttpClient client;
+
+            endpointUrl = buildUrl(endpoint, endpointParams, endpointData);
+            request = prepareRequest(HttpMethod.Get, endpointUrl);
+            client = new HttpClient();
 
             var response = await client.SendAsync(request);
 
-            var SuccessfulResponseGet = new { success = false, data = new ExpandoObject() };
-            var SuccessfulResponsePost = new { success = false, data = new ExpandoObject(), ack = false };
+            
+            var stringResponse = await response.Content.ReadAsStringAsync();
+            return processResponse(HttpMethod.Get, endpointUrl, stringResponse, response.IsSuccessStatusCode);
+        }
+
+        public static ExpandoObject processResponse(HttpMethod method, string endpointUrl, string stringResponse, bool isSuccessful)
+        {
+            dynamic jsonResponse;
+            dynamic SuccessfulResponse;
+
+            if(method == HttpMethod.Get) {
+                SuccessfulResponse = new { success = false, data = new ExpandoObject() };
+            } else {
+                SuccessfulResponse = new { success = false, data = new ExpandoObject(), ack = false };
+            }
+            
+            
             var UnsuccessfulResponse = new { success = false, data = new ExpandoObject(), message="" };
 
-            var stringResponse = await response.Content.ReadAsStringAsync();
 
-            dynamic jsonResponse;
-
-            if(response.IsSuccessStatusCode)
+            if(isSuccessful)
             {
-                jsonResponse = JsonConvert.DeserializeAnonymousType(stringResponse, SuccessfulResponseGet);
+                try {
+                    jsonResponse = JsonConvert.DeserializeAnonymousType(stringResponse, SuccessfulResponse);
+                } catch (JsonReaderException ex) {
+                    throw new ArgumentException("There was a problem parsing the JSON", stringResponse, ex);
+                }
+                
             } else {
                 jsonResponse = JsonConvert.DeserializeAnonymousType(stringResponse, UnsuccessfulResponse);
+                throw new ArgumentException(jsonResponse.message, stringResponse);
             }
+
+            return jsonResponse.data;
+        }
+
+
+        // POST: Jokes/SearchResults
+        public async Task<IActionResult> SearchResults(String Search)
+        {
+            string apiEndPoint;
+            Dictionary<string, string> endpointParams, endpointData;
+
+            //endpoint = "api/files/{id}/{something}/{that}";
+            endpointParams = new Dictionary<string, string>() {
+                { "id", "1231224" },
+                { "something", "u2" },
+                { "that", "take that" },
+            };
+            endpointData = new Dictionary<string, string>() {
+                {"page", "1"},
+                {"perPage", "25"},
+                {"search", "Mircea&Jeandrew like cheese"},
+            };
+
+           
+            apiEndPoint = "api/users/getAuthData/{id}";
+            // apiEndPoint = "api/leads/getForIntermediary/{id}";
+
+            var data = await doGet(apiEndPoint, endpointParams, endpointData);
+            return Json(data);
+
             
             
             //dynamic jsonResponse = JsonConvert.DeserializeObject(stringResponse);
@@ -92,7 +167,7 @@ namespace JokesTutorial.Controllers
             //Console.WriteLine(stringResponse);
             //Console.WriteLine(jsonResponse);
             //return Content(stringResponse);
-            return Json(jsonResponse);
+            //return Json(jsonResponse);
             //}
 
 
