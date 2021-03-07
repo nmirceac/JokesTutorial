@@ -101,6 +101,31 @@ namespace JokesTutorial.Controllers
             return processResponse(HttpMethod.Get, endpointUrl, stringResponse, response.IsSuccessStatusCode);
         }
 
+        public static async Task<ExpandoObject> doPost(string endpoint, Dictionary<string, string> endpointParams, ExpandoObject data)
+        {
+            //apiDebug = Convert.ToBoolean(Environment.GetEnvironmentVariable("API_CLIENT_DEBUG"));
+
+            string endpointUrl;
+            HttpRequestMessage request;
+            HttpClient client;
+
+            endpointUrl = buildUrl(endpoint, endpointParams, new Dictionary<string, string> {});
+            request = prepareRequest(HttpMethod.Post, endpointUrl);
+
+            var jsonPayload = JsonConvert.SerializeObject(data);
+            var requestContent = new StringContent(jsonPayload, System.Text.Encoding.UTF8, "application/json");
+
+            request.Content = requestContent;
+
+            client = new HttpClient();
+
+            var response = await client.SendAsync(request);
+
+            
+            var stringResponse = await response.Content.ReadAsStringAsync();
+            return processResponse(HttpMethod.Post, endpointUrl, stringResponse, response.IsSuccessStatusCode);
+        }
+
         public static ExpandoObject processResponse(HttpMethod method, string endpointUrl, string stringResponse, bool isSuccessful)
         {
             dynamic jsonResponse;
@@ -137,11 +162,27 @@ namespace JokesTutorial.Controllers
         public async Task<IActionResult> SearchResults(String Search)
         {
             string apiEndPoint;
-            Dictionary<string, string> endpointParams, endpointData;
+            Dictionary<string, string> endpointParams;
+            dynamic endpointData;
 
-            //endpoint = "api/files/{id}/{something}/{that}";
+            apiEndPoint = "api/quote/setClientName";
             endpointParams = new Dictionary<string, string>() {
-                { "id", "1231224" },
+                { "id", "4" },
+                { "something", "u2" },
+                { "that", "take that" },
+            };
+
+            endpointData = new ExpandoObject();
+            endpointData.quote_id = 45;
+            endpointData.client_name = "do post client name";
+
+
+            var data = await doPost(apiEndPoint, endpointParams, endpointData);
+            return Json(data);
+
+            apiEndPoint = "api/users/getAuthData/{id}";
+            endpointParams = new Dictionary<string, string>() {
+                { "id", "4" },
                 { "something", "u2" },
                 { "that", "take that" },
             };
@@ -151,11 +192,8 @@ namespace JokesTutorial.Controllers
                 {"search", "Mircea&Jeandrew like cheese"},
             };
 
-           
-            apiEndPoint = "api/users/getAuthData/{id}";
-            // apiEndPoint = "api/leads/getForIntermediary/{id}";
 
-            var data = await doGet(apiEndPoint, endpointParams, endpointData);
+            //var data = await doGet(apiEndPoint, endpointParams, endpointData);
             return Json(data);
 
             
