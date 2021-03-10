@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Dynamic;
 using System.Web;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace JokesTutorial.Controllers
@@ -155,6 +156,71 @@ namespace JokesTutorial.Controllers
             }
 
             return jsonResponse.data;
+        }
+
+        public static ExpandoObject getFilePayloadFromPath(string filePath, string role = "files", int order = 0)
+        {
+            dynamic fileData;
+
+            if(!System.IO.File.Exists(filePath)) {
+                throw new ArgumentException("Couldn't find a file at path", filePath);
+            }
+
+            
+
+            fileData = new ExpandoObject();
+
+            FileInfo fileInfo;
+            string fileMime;
+
+            new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider().TryGetContentType(filePath, out fileMime);
+            fileInfo = new FileInfo(filePath);
+            
+
+            String filePayload = Convert.ToBase64String(System.IO.File.ReadAllBytes(filePath));
+
+            fileData.mime = fileMime;
+            fileData.name = Path.GetFileNameWithoutExtension(filePath);
+            fileData.extension = Path.GetExtension(filePath).TrimStart('.');
+
+            fileData.basename = fileInfo.Name;
+            fileData.size = fileInfo.Length;
+            fileData.lastModified = System.IO.File.GetLastWriteTimeUtc(filePath).ToString("yyyy-MM-dd HH:mm:ss");
+            fileData.originalPath = Path.GetFullPath(filePath);
+
+            fileData.role = role;
+            fileData.order = order;
+
+            fileData.content = filePayload;
+
+            return fileData;
+        }
+
+        // GET: Jokes/Test
+        public IActionResult Test()
+        {
+            dynamic testPayload = getFilePayloadFromPath("test.pdf");
+
+            string apiEndPoint;
+            Dictionary<string, string> endpointParams;
+            dynamic endpointData;
+
+            apiEndPoint = "api/policies/attachFile/{id}";
+            endpointParams = new Dictionary<string, string>() {
+                { "id", "1" },
+                { "something", "u2" },
+                { "that", "take that" },
+            };
+
+            dynamic fileData = new ExpandoObject();
+
+
+            endpointData = new ExpandoObject();
+            // endpointData.file = fileData;
+            endpointData.file = testPayload;
+
+            var data = doPost(apiEndPoint, endpointParams, endpointData);
+            return Json(data.Result);
         }
 
 
