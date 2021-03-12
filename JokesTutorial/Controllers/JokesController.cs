@@ -41,49 +41,70 @@ namespace JokesTutorial.Controllers
         }
 
         // GET: Jokes/Policy
-        public IActionResult Policy()
-        {
-            string apiEndPoint;
-            Dictionary<string, string> endpointParams;
-            dynamic endpointData;
+        // public IActionResult Policy()
+        // {
+        //     string apiEndPoint;
+        //     Dictionary<string, string> endpointParams;
+        //     dynamic endpointData;
 
-            apiEndPoint = "api/policies/attachFile/{id}";
-            endpointParams = new Dictionary<string, string>() {{ "id", "1" }};
+        //     apiEndPoint = "api/policies/attachFile/{id}";
+        //     endpointParams = new Dictionary<string, string>() {{ "id", "1" }};
 
-            endpointData = new ExpandoObject();
-            endpointData.file = ApiClientTools.Client.getFilePayloadFromPath("test.pdf");
+        //     endpointData = new ExpandoObject();
+        //     endpointData.file = ApiClientTools.File.getFilePayloadFromPath("test.pdf");
 
-            var data = ApiClientTools.Client.doPost(apiEndPoint, endpointParams, endpointData);
-            return Json(data.Result);
-        }
+        //     var data = ApiClientTools.Client.doPost(apiEndPoint, endpointParams, endpointData);
+        //     return Json(data.Result);
+        // }
 
-        // GET: Jokes/Will
-        public IActionResult Will()
-        {
-            string apiEndPoint;
-            Dictionary<string, string> endpointParams;
-            dynamic endpointData;
+        // // GET: Jokes/Will
+        // public IActionResult Will()
+        // {
+        //     return Json(Api.Region.getResource());
 
-            apiEndPoint = "api/wills/attachFile/{id}";
-            endpointParams = new Dictionary<string, string>() {{ "id", "1" }};
+        //     string apiEndPoint;
+        //     Dictionary<string, string> endpointParams;
+        //     dynamic endpointData;
 
-            endpointData = new ExpandoObject();
-            endpointData.file = ApiClientTools.Client.getFilePayloadFromPath("test.exe");
+        //     apiEndPoint = "api/wills/attachDetailFile/{id}";
+        //     endpointParams = new Dictionary<string, string>() {{ "id", "1" }};
 
-            var data = ApiClientTools.Client.doPost(apiEndPoint, endpointParams, endpointData);
-            return Json(data.Result);
-        }
+        //     endpointData = new ExpandoObject();
+        //     endpointData.file = ApiClientTools.File.getFilePayloadFromPath("test.xlsx");
+
+        //     var data = Api.Client.doPost(apiEndPoint, endpointParams, endpointData);
+        //     return Json(data.Result);
+        // }
         
 
         // GET: Jokes/Test
-        public IActionResult Test()
+        public async Task<IActionResult> Test()
         {
-            return Content("asdas");
-            dynamic testPayload = ApiClientTools.Client.getFilePayloadFromPath("test.pdf");
-
+            ApiClientTools.Response response;
             string apiEndPoint;
             Dictionary<string, string> endpointParams;
             dynamic endpointData;
+
+            apiEndPoint = "api/users/getAuthData/{id}";
+            apiEndPoint = "api/regions/getResource";
+            
+            endpointParams = new Dictionary<string, string>() {
+                { "id", "1" },
+                // { "something", "u2" },
+                // { "that", "take that" },
+            };
+            endpointData = new Dictionary<string, string>() {
+                // {"page", "1"},
+                // {"perPage", "25"},
+                // {"search", "Mircea&Jeandrew like cheese"},
+            };
+
+
+            response = await ApiClientTools.Client.doGet(apiEndPoint, endpointParams, endpointData);
+            return Json(response);
+
+
+            dynamic testPayload = ApiClientTools.File.getFilePayloadFromPath("test.pdf");
 
             apiEndPoint = "api/policies/attachFile/{id}";
             endpointParams = new Dictionary<string, string>() {
@@ -92,92 +113,84 @@ namespace JokesTutorial.Controllers
                 { "that", "take that" },
             };
 
-            dynamic fileData = new ExpandoObject();
-
-
             endpointData = new ExpandoObject();
-            // endpointData.file = fileData;
             endpointData.file = testPayload;
 
-            var data = ApiClientTools.Client.doPost(apiEndPoint, endpointParams, endpointData);
-            return Json(data.Result);
+            response = await ApiClientTools.Client.doPost(apiEndPoint, endpointParams, endpointData);
+            return Json(response);
         }
 
 
-        // POST: Jokes/SearchResults
-        public async Task<IActionResult> SearchResults(String Search)
-        {
-            string apiEndPoint;
-            Dictionary<string, string> endpointParams;
-            dynamic endpointData;
+        // // POST: Jokes/SearchResults
+        // public async Task<IActionResult> SearchResults(String Search)
+        // {
+        //     string apiEndPoint;
+        //     Dictionary<string, string> endpointParams;
+        //     dynamic endpointData;
 
-            apiEndPoint = "api/quote/setClientName";
-            endpointParams = new Dictionary<string, string>() {
-                { "id", "4" },
-                { "something", "u2" },
-                { "that", "take that" },
-            };
+        //     apiEndPoint = "api/quote/setClientName";
+        //     endpointParams = new Dictionary<string, string>() {
+        //         { "id", "4" },
+        //         { "something", "u2" },
+        //         { "that", "take that" },
+        //     };
 
-            endpointData = new ExpandoObject();
-            endpointData.quote_id = 45;
-            endpointData.client_name = "do post client name";
+        //     endpointData = new ExpandoObject();
+        //     endpointData.quote_id = 45;
+        //     endpointData.client_name = "do post client name";
 
-
-            var data = await ApiClientTools.Client.doPost(apiEndPoint, endpointParams, endpointData);
-            return Json(data);
-
-            apiEndPoint = "api/users/getAuthData/{id}";
-            endpointParams = new Dictionary<string, string>() {
-                { "id", "4" },
-                { "something", "u2" },
-                { "that", "take that" },
-            };
-            endpointData = new Dictionary<string, string>() {
-                {"page", "1"},
-                {"perPage", "25"},
-                {"search", "Mircea&Jeandrew like cheese"},
-            };
+        //     apiEndPoint = "api/regions/getResource";
+        //     endpointParams = new Dictionary<string, string>() {
+        //         // { "id", "4" },
+        //         // { "something", "u2" },
+        //         // { "that", "take that" },
+        //     };
+        //     endpointData = new Dictionary<string, string>() {
+        //         // {"page", "1"},
+        //         // {"perPage", "25"},
+        //         // {"search", "Mircea&Jeandrew like cheese"},
+        //     };
 
 
-            //var data = await doGet(apiEndPoint, endpointParams, endpointData);
-            return Json(data);
+        //     var data = await ApiClientTools.Client.doGet(apiEndPoint, endpointParams, endpointData);
+        //     return Json(data);
 
             
             
-            //dynamic jsonResponse = JsonConvert.DeserializeObject(stringResponse);
-            //dynamic jsonResponse = JArray.Parse(stringResponse);
-            //dynamic jsonResponse = JObject.Parse(stringResponse);
+        //     //dynamic jsonResponse = JsonConvert.DeserializeObject(stringResponse);
+        //     //dynamic jsonResponse = JArray.Parse(stringResponse);
+        //     //dynamic jsonResponse = JObject.Parse(stringResponse);
             
-            //Console.WriteLine(stringResponse);
-            //Console.WriteLine(jsonResponse);
-            //return Content(stringResponse);
-            //return Json(jsonResponse);
-            //}
+        //     //Console.WriteLine(stringResponse);
+        //     //Console.WriteLine(jsonResponse);
+        //     //return Content(stringResponse);
+        //     //return Json(jsonResponse);
+        //     //}
 
 
-            //Task<IActionResult> task = new Task<IActionResult>()
-            //{
-            //Console.WriteLine(Student);
-            //return Json(Student);
-            //};
+        //     //Task<IActionResult> task = new Task<IActionResult>()
+        //     //{
+        //     //Console.WriteLine(Student);
+        //     //return Json(Student);
+        //     //};
 
 
-            //return await Task.Run(() =>
-            //{
-            //var Test = new { Amount = 108, Message = "Hello" };
-            //var Student = (s: Search, t: "asdasdsa");
+        //     //return await Task.Run(() =>
+        //     //{
+        //     //var Test = new { Amount = 108, Message = "Hello" };
+        //     //var Student = (s: Search, t: "asdasdsa");
 
 
-            //Console.WriteLine(Student);
-            //return Json(Student);
-            //});
+        //     //Console.WriteLine(Student);
+        //     //return Json(Student);
+        //     //});
 
-            //return Content(" I like cheese ");
+        //     //return Content(" I like cheese ");
 
-            //return Json(new { search = Student, results = _context.Joke.Where(q => q.Question.Contains(Search)).ToList() });
-            //return Json(new { search = Search, results = await _context.Joke.Where(q => q.Question.Contains(Search)).ToListAsync() });
-            return View("SearchResults", ( Search, await _context.Joke.Where(q => q.Question.Contains(Search)).ToListAsync() ));
-        }
+        //     //return Json(new { search = Student, results = _context.Joke.Where(q => q.Question.Contains(Search)).ToList() });
+        //     //return Json(new { search = Search, results = await _context.Joke.Where(q => q.Question.Contains(Search)).ToListAsync() });
+        //     return View("SearchResults", ( Search, await _context.Joke.Where(q => q.Question.Contains(Search)).ToListAsync() ));
+        // }
 
         // GET: Jokes/Details/5
         public async Task<IActionResult> Details(int? id)
