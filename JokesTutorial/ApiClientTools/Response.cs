@@ -55,7 +55,7 @@ namespace ApiClientTools
                     response.jsonResponse = JsonConvert.DeserializeAnonymousType(stringResponse, responseType);
                 } catch (JsonReaderException ex) {
                     if(ApiClientTools.Config.getDebug()) {
-                        throw new ArgumentException("There was a problem parsing the JSON\n\n", stringResponse, ex);
+                        throw new ArgumentException("There was a problem parsing the response JSON to the request to "+request.requestUrl+"\n\n", stringResponse, ex);
                     } else {
                         throw new ArgumentException("There was a problem parsing the JSON\n\n", stringResponse.Substring(0, 128), ex);
                     }

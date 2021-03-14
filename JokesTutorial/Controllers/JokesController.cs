@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 using JokesTutorial.Data;
 using JokesTutorial.Models;
-using JokesTutorial.Libraries;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Dynamic;
@@ -84,6 +83,23 @@ namespace JokesTutorial.Controllers
             string apiEndPoint;
             Dictionary<string, string> endpointParams;
             dynamic endpointData;
+
+            endpointData = new ExpandoObject();
+            endpointData.quote_id = 45;
+            endpointData.client_name = "ApiTools Rulz";
+
+            return Json(Api.Quote.setClientName(endpointData));
+
+
+            return Json(Api.Region.get(3));
+
+            endpointParams = new System.Collections.Generic.Dictionary<string, string>()
+            {
+            };
+            return Json(Api.Region.index(page:2));
+
+
+            
 
             apiEndPoint = "api/users/getAuthData/{id}";
             apiEndPoint = "api/regions/getResource";

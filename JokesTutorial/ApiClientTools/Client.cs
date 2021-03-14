@@ -16,9 +16,14 @@ namespace ApiClientTools
 {
     public class Client
     {
+        public static async Task<object> doGet(string endpoint, Dictionary<string, string> endpointParams = null, Dictionary<string, string> endpointData = null)
+        {
+            dynamic response = await doGetRequest(endpoint, endpointParams, endpointData);
+            return response.data;
+        }
         
 
-        public static async Task<ApiClientTools.Response> doGet(string endpoint, Dictionary<string, string> endpointParams = null, Dictionary<string, string> endpointData = null)
+        public static async Task<ApiClientTools.Response> doGetRequest(string endpoint, Dictionary<string, string> endpointParams = null, Dictionary<string, string> endpointData = null)
         {
             ApiClientTools.Request request = new ApiClientTools.Request();
             request.endpointUrl = endpoint;
@@ -34,6 +39,12 @@ namespace ApiClientTools
         }
 
         public static async Task<ApiClientTools.Response> doPost(string endpoint, Dictionary<string, string> endpointParams = null, ExpandoObject data = null)
+        {
+            dynamic response = await doPostRequest(endpoint, endpointParams, data);
+            return response.data;
+        }
+
+        public static async Task<ApiClientTools.Response> doPostRequest(string endpoint, Dictionary<string, string> endpointParams = null, ExpandoObject data = null)
         {
             ApiClientTools.Request request = new ApiClientTools.Request();
             request.endpointUrl = endpoint;
